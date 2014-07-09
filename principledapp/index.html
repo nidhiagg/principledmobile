@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta charset="utf-8" />
+        
+        <link href="kendo/styles/kendo.mobile.flat.min.css" rel="stylesheet" />
+        <link href="styles/main.css" rel="stylesheet" />
+        <link href="styles/css/ws-icons.css" rel="stylesheet" />
+
+        <script src="cordova.js"></script>
+        <script src="kendo/js/jquery-2.0.3.min.js"></script>
+        <script src="kendo/js/kendo.mobile.min.js"></script>
+      
+        <script src="scripts/lawnchair-0.6.1.js"></script>
+        <script src="scripts/lawnchair-adapter-webkit-sqlite-0.6.1.js"></script>
+        <script src="scripts/lawnchair-plugins/query.js"></script>
+        <script src="scripts/lawnchair-plugins/callbacks.js"></script>
+
+        <script src="scripts/login.js"></script>
+        
+        <script src="scripts/job.js"></script>
+        <script src="scripts/photo.js"></script>
+        <script src="scripts/upload.js"></script>
+        <script src="scripts/database.js"></script>
+        <script src="scripts/app.js"></script>
+        <script src="scripts/sha1.js"></script>
+        <script src="scripts/sha512.js"></script>
+        <!--<script src="scripts/Eqatec.js"></script>-->
+
+    </head>
+    <body> 
+         
+        <!-- Fake spash screen-->
+        <div id="tabstrip-splash" 
+             data-role="view"  
+             data-title="Welcome"
+             data-before-show-disabled="navigator.splashscreen.show"
+             data-layout="splash-layout"
+             class="black"
+             >
+        </div>
+        
+        
+        <!--Login-->
+        <div id="tabstrip-login" 
+             data-role="view"
+             data-transition="slide"
+             data-title="Login"
+             data-before-show="app.disableStatusOverlay"
+             data-hide="app.enableStatusOverlay"
+             data-layout="login-layout"
+             data-model="app.loginService.viewModel">
+
+            <div class="view-content">
+                <div class="principled-logo"></div>
+                <h3 data-bind="invisible: isLoggedIn" class="center">Enter your credentials</h3>
+
+                <ul data-role="listview" data-style="inset" data-bind="invisible: isLoggedIn">
+                    <li>
+                        <label><i class="icon-at"></i><input type="email" placeholder="email" data-bind="value: username"/></label>
+                    </li>
+                    <li>
+                        <label><i class="icon-key"></i><input type="password" placeholder="password" data-bind="value: password" /></label>
+                    </li>
+                </ul>
+
+                <div class="buttonArea"> 
+                    <a id="login" data-role="button" data-bind="click: onLogin, invisible: isLoggedIn" class="login-button">Login</a>
+                </div>
+            </div>
+
+        </div>
+        
+        <!--Home-->
+        <div id="tabstrip-home" 
+             data-role="view" 
+             data-title="My jobs"
+             data-model="app.jobService.viewModel" 
+             data-layout="tabstrip-layout"
+             data-before-show="app.jobService.viewModel.getJobs"
+             data-transition="slide"
+             >
+
+            <div id="jobs-list" class="view-content">
+                <div class="buttonArea">
+                	<a id="reload-button" data-role="button" data-click="fetchData" data-icon="refresh">Reload jobs</a>
+                </div>
+                <ul id="jobsList" class="job-list-items" data-role="listview" data-style="inset" data-source="app.jobsSource" data-pull-to-refresh="false" data-append-on-refresh="false" data-pull-parameters="fetchData" data-auto-bind="true" data-template="jobs-template"></ul>
+            </div>
+            
+            
+            <div id="job-screen" class="view-content hidden" data-pull-to-refresh="false">
+                <ul id="surveys-list" class="survey-list-items" data-role="listview" data-style="inset" data-pull-to-refresh="false" data-append-on-refresh="false" data-auto-bind="true"></ul>
+            </div>
+            
+            
+            <div id="property-survey-screen" class="survey-screen view-content hidden">
+                <h1>Property survey</h1>
+                <form id="property-survey-form" class="survey-form">
+                    <fieldset>
+                        <div class="field"><label>Access notes</label><textarea class="survey-form-input" type="text" data-target="access_note" data-bind="value: data.access_note"></textarea></div>
+                        <div class="notes" data-bind="html:access_notes"></div>
+                    </fieldset>
+                    <fieldset>
+                        <h2>Access to the unit</h2>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="artic" data-target="upto" data-bind="checked: data.upto"> 26t Artic</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="lorry" data-target="upto" data-bind="checked: data.upto"> 7.5t Lorry</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="truck" data-target="upto" data-bind="checked: data.upto"> Fork truck</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="van" data-target="upto" data-bind="checked: data.upto"> Van</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="car" data-target="upto" data-bind="checked: data.upto"> Car</label></div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <h2>Access inside the unit</h2>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="artic" data-target="inside" data-bind="checked: data.inside"> 26t Artic</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="lorry" data-target="inside" data-bind="checked: data.inside"> 7.5t Lorry</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="truck" data-target="inside" data-bind="checked: data.inside"> Fork truck</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="van" data-target="inside" data-bind="checked: data.inside"> Van</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="car" data-target="inside" data-bind="checked: data.inside"> Car</label></div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <h2>Floor</h2>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="level" data-target="floor" data-bind="checked: data.floor"> Level</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="carpet" data-target="floor" data-bind="checked: data.floor"> Carpeted</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="concrete" data-target="floor" data-bind="checked: data.floor"> Concrete</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="laminate" data-target="floor" data-bind="checked: data.floor"> Laminate</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="other" data-target="floor" data-bind="checked: data.floor"> Other</label></div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <h2>Facilities</h2>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="warehouse_door" data-target="facilities" data-bind="checked: data.facilities"> Warehouse door</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="loading_bay" data-target="facilities" data-bind="checked: data.facilities"> Loading bay</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="light" data-target="facilities" data-bind="checked: data.facilities"> Lighting</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="electric" data-target="facilities" data-bind="checked: data.facilities"> Electric</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="water" data-target="facilities" data-bind="checked: data.facilities"> Water</label></div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <h2>Reach</h2>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="stairs" data-target="reach" data-bind="checked: data.reach"> Stairs (individual)</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="elevator" data-target="reach" data-bind="checked: data.reach"> Elevators</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="ramp" data-target="reach" data-bind="checked: data.reach"> Ramps</label></div>
+                        <div class="field"><label><input class="survey-form-input" type="checkbox" value="doorway" data-target="reach" data-bind="checked: data.reach"> Doorways</label></div>
+                        
+                        <div class="field"><label>If so, how many?</label><input class="survey-form-input" type="text" value="" data-target="reach_no" data-bind="value: data.reach_no"></div>
+                        <div class="field"><label>How wide are they?</label><input class="survey-form-input" type="text" value="" data-target="reach_width" data-bind="value: data.reach_width"></div>
+                        <div class="field"><label>Entrance type</label><textarea class="survey-form-input" type="text" data-target="entrance" data-bind="value: data.entrance"></textarea></div>
+                        <div class="field"><label>Supply details</label><textarea class="survey-form-input" type="text" data-target="supply" data-bind="value: data.supply"></textarea></div>
+                        
+                    </fieldset>
+                    
+                    <fieldset>
+                        <div class="field"><label>Additional comments</label><textarea class="survey-form-input" type="text" data-target="note" data-bind="value: data.note"></textarea></div>
+                        <div class="notes" data-bind="html:notes"></div>
+                    </fieldset>
+                    
+                </form>
+            </div>
+            
+            <div id="survey-screen" class="survey-screen view-content hidden flip-container">
+                
+                <div id="survey-form-screen" class="flip-side">
+                    <div class="buttonArea"> 
+                        <a id="camera" data-role="button" data-icon="camera" data-click="toggleCamera"></a>
+                    </div>
+                    <form id="survey-form" class="survey-form">
+                        <fieldset>
+                            
+                            <div class="field"><label>Survey date</label><input class="survey-form-input" type="date" value="" data-target="date" data-bind="value: data.date"></div>
+                        	<div class="field">
+                                <label>Utility working</label>
+                                <input class="survey-form-input" id="utilities_working" data-target="utilities_working" data-role="switch" data-on-label="Yes" data-off-label="No" data-change="onSwitch">
+                            </div>
+                            <div class="field"><label>Gas</label><input class="survey-form-input" type="number" value="" data-target="gas" data-bind="value: data.gas"></div>
+                            <div class="field"><label>Electric</label><input class="survey-form-input" type="number" value="" data-target="electric" data-bind="value: data.electric"></div>
+                            <div class="field"><label>Water</label><input class="survey-form-input" type="number" value="" data-target="water" data-bind="value: data.water"></div>
+                            <div class="preuse-survey-fields optional-survey-fields hidden">
+                                <div class="field">
+                                    <label>Suitable for 3rd party</label>
+                                    <input class="survey-form-input" id="suitable" data-target="suitable" data-role="switch" data-on-label="Yes" data-off-label="No" data-change="onSwitch">
+                                </div>
+                                <div class="field"><label>Building standard</label><input class="survey-form-input" type="text" value="" data-target="building_standard" data-bind="value: data.building_standard"></div>
+                            </div>
+                            <div class="stockfill-survey-fields optional-survey-fields hidden">
+                                <div class="field"><label>Actual pallets</label><input class="survey-form-input" type="number" value="" data-target="pallets_no" data-bind="value: data.pallets_no"></div>
+                            </div>
+                            <div class="stockfill-survey-fields exit-survey-fields optional-survey-fields hidden">
+                                <div class="field"><label>Work standard</label><input class="survey-form-input" type="text" value="" data-target="work_standard" data-bind="value: data.work_standard"></div>
+                            </div>
+
+                        </fieldset>
+                        
+                        <fieldset>
+                           <div class="field"><label>Additional comments</label><textarea class="survey-form-input" type="text" data-target="note" data-bind="value: data.note"></textarea></div>
+                           <div class="notes" data-bind="html:notes"></div>
+                        </fieldset>
+                        
+                    </form>
+                </div>
+                
+                <div id="survey-photos-screen" class="flip-side hidden">
+                    <div class="buttonArea">
+                        <a data-role="button" data-icon="compose" data-click="toggleCamera"></a>
+                        <a id="camera" data-role="button" data-icon="camera" data-click="app.Photo.capture">Take picture</a>
+                    </div>
+                    <div class="picturesArea"><img id="survey_pic" src="" style="width:200px; height:100px"></div>
+                </div>
+                
+                
+            </div>
+			
+            <!--
+            <div id="survey-screen" class="survey-screen view-content hidden">
+                <div data-role="view" id="drawer-settings">
+                    <h1>Settings</h1>
+                </div>
+                
+                <div data-role="drawer" id="my-drawer" data-position="left">
+                    Hi!
+                </div>
+            </div>
+			-->
+                
+            
+            
+			<script type="text/x-kendo-template" id="jobs-template">
+                <a data-role="touch" data-tap="showJobScreen" data-id="#: data.id #"><div class="job-label"><span class="sync-status sync-status-#: data.is_sync #"></span><span class="job-no">#: data.job_no #</span><span class="job-next-survey icon-recents">#: data.next_survey #</span></div>#: data.address # <span class="job-distance" id="distance_#: data.id #"></span></a>
+            </script>
+            
+            <script type="text/x-kendo-template" id="jobs-template-alternative">
+                <a data-role="touch" data-tap="showJobScreen" data-id="#: data.id #"><div class="job-label"><span class="job-no">Job\# #: data.job_no #</span> <span class="status status#: data.status #">#: app.config.status[data.status] # </span></div>#: data.address # <span class="job-distance" id="distance_#: data.id #"></span></a>
+            </script>
+            
+            <script type="text/x-kendo-template" id="job-surveys-template">
+                <a data-role="touch" data-icon="#:icon#" data-tap="showSurveyScreen" data-type="#: type #">#: name #</a>
+            </script>
+
+            
+            <script>
+                
+           	var effect = kendo.fx("#survey-screen").flipHorizontal($("#survey-form-screen"), $("#survey-photos-screen")).duration(1000),
+            reverse = false;
+
+            toggleCamera = function() {
+                effect.stop();
+                reverse ? effect.reverse() : effect.play();
+                reverse = !reverse;
+            };
+            
+            toggleCamera2 = function() {
+                var page1 = $('.flip-page1');
+                var page2 = $('.flip-page2');
+                var toHide = page1.is(':visible') ? page1 : page2;
+                var toShow = page2.is(':visible') ? page1 : page2;
+                
+                toHide.removeClass('flip in').addClass('flip out').hide();
+                toShow.removeClass('flip out').addClass('flip in').show();
+            };
+                
+           
+            app.jobsSource = new kendo.data.DataSource({ data: [ { id: "", address: "", lat: '', long: '' } ] });
+                
+            function fetchData() {
+                app.jobService.viewModel.fetchJobs();
+            }
+                
+            showSurveyPictures = function()
+            {
+                //app.pictures.nuke();
+
+                $('.picturesArea').html('');
+                $('.picturesArea').text('');
+                $('.km-content:visible').data('kendoMobileScroller').reset();
+                $('.picturesArea').css('height','200px');
+                
+                var surveyKey = app.Job.surveyKey();
+
+                app.pictures.get(surveyKey,function(obj)
+                {
+                    
+                    
+                    if(obj !== null && obj.value.photos.length > 0)
+                    {
+
+                        $(obj.value.photos).each(function(i,p){
+                            showImage(p); 
+                        });
+                        
+                    }
+                    else
+                    {
+                        
+                        $('.picturesArea').html('<p class="no-images">No new images</p>');
+                        if(typeof(app.currentJob.surveys[app.currentSurveyType].data.pics_no) != 'undefined')
+                        {
+                             $('.picturesArea').append('<p class="uploaded-images"><b>' + app.currentJob.surveys[app.currentSurveyType].data.pics_no + '<b> images uploaded</p>');
+                        }
+                    }
+                });
+                
+            }
+            
+            function showImage(filename) {
+                var photoDir = app.photoDirectory.toURL();
+                var photoPath = photoDir+'/'+filename;
+                var image = new Image(); // or document.createElement('img')
+                var width, height;
+                
+                image.onload = function() {
+                    var image = $('<img>',{src: photoPath, width:'100%' });
+                    var key = app.Photo.filenameToId(filename);
+                    var imageDiv = $('<div>',{id: 'container-'+key, class: 'photo-div' });
+                    imageDiv.append(image);
+                    
+                    // delete button
+                    var deleteButton = $('<button>',{ class: 'photo-button photo-delete-button' });
+                    deleteButton.attr('data-id',key);
+                    deleteButton.on('touchend',function(){
+                        deletePhoto(this);
+                    })
+                    deleteButton.text('Delete photo');
+                    imageDiv.append(deleteButton);
+                    
+                    // upload button
+                    var uploadButton = $('<button>',{ class: 'photo-button photo-upload-button' });
+                    uploadButton.attr('data-id',key);
+                    uploadButton.on('touchend',function(){
+                        uploadPhoto(this);
+                    })
+                    uploadButton.text('Upload photo');
+                    imageDiv.append(uploadButton);
+                    
+                    $('.picturesArea').append(imageDiv);
+                    
+                };
+                image.src = photoPath;
+            }
+                
+ 
+            deletePhoto = function(btn)
+            {
+                
+                navigator.notification.confirm(
+                    'Do you really want to delete this photo?', // message
+                    function(choice) // callback to invoke with index of button pressed
+                    {
+                       	
+                        if(choice == 1) { 
+                        	var fileId = $(btn).data('id');
+                            var filename = app.Photo.idToFilename(fileId);
+                            
+                            var key = app.Job.surveyKey();
+                            
+                            app.Photo.trash(filename,key,function(){
+                                $('#container-'+fileId).slideUp(500);
+                            });
+                        }
+                        
+                    },            	     
+                    'Delete photo',      // title
+                    ['Yes','No']         // buttonLabels
+                );
+                
+               
+                return false;
+
+            }
+            
+            uploadPhoto = function(btn)
+            {
+                
+                if(!app.checkNetwork('Cannot upload photo')) return false;
+                if($(btn).attr('disabled') == 'disabled') return false;
+                
+                navigator.notification.confirm(
+                    'Do you really want to upload this photo?', // message
+                    function(choice) // callback to invoke with index of button pressed
+                    {
+                       	
+                        if(choice == 1) {
+                            
+                        	var fileId = $(btn).data('id');
+                            var filename = app.Photo.idToFilename(fileId);
+                            
+                            $(btn).attr('disabled','disabled');
+                            $(btn).html($('<img>',{ src: 'styles/images/ajax-loader-white.gif', style: 'text-align:center' }));
+                              
+                            var key = app.Job.surveyKey();
+                            
+                            app._removeFile = {
+                                filename: filename,
+                                key: key,
+                                fileId: fileId,
+                                remove: function()
+                                {
+                                	
+                                    app.Photo.trash(filename,key,function()
+                                    {
+                                        $('#container-'+fileId).slideUp(500);
+                                    });
+
+                            	}
+                            }
+                            
+                            app.Upload.run(key, filename, function(r)
+                            {
+                               
+                                var response = JSON.parse(r.response);
+                                
+                                app._removeFile.remove();
+                                
+                                app.currentJob.surveys[app.currentSurveyType].data.pics_no = response.pics_no;
+                                
+                                //console.log('file uploaded');
+                                //console.log("Code = " + r.responseCode);
+                                //console.log("Response = " + r.response);
+                                //console.log("Sent = " + r.bytesSent);
+                            });
+                            
+                        }
+                        
+                    },            	     
+                    'Upload photo',      // title
+                    ['Yes','No']         // buttonLabels
+                );
+                
+               
+                return false;
+
+            } // end uploadPhoto
+            
+                
+            showJobsList = function()
+            {
+               
+               // debug tab
+               if(app.loginService.viewModel.isAdminLoggedIn)
+               {
+                   $('#debug-tab').removeClass('hidden');
+               }
+               else
+               {
+                    $('#debug-tab').addClass('hidden');
+               }
+                
+               $('.km-content:visible').data('kendoMobileScroller').reset();
+               $('#survey-save-btn').addClass('hidden');
+               app.showTitle("My jobs");
+               $('#job-screen').addClass('hidden');
+               $('#jobs-list-btn').addClass('hidden');
+               $('#surveys-list-btn').addClass('hidden');
+               $('#jobs-list').removeClass('hidden');
+               $('.survey-screen').addClass('hidden');
+               app.currentJob = {};
+               return false;
+            }
+              
+           
+            showJobScreen = function(e)
+            {
+               $('.km-content:visible').data('kendoMobileScroller').reset();
+               $('#jobs-list').addClass('hidden');
+               $('.survey-screen').addClass('hidden');
+               $('#jobs-list-btn').removeClass('hidden');
+               $('#surveys-list-btn').addClass('hidden');
+               $('#survey-save-btn').addClass('hidden');
+
+               $('.survey-screen').addClass('hidden');
+               //window.scrollTo(0,0);
+               
+               
+                
+               if(typeof(e.touch) != 'undefined') var job_id = $(e.touch.target).data('id'); // coming from jobs list
+               else var job_id = app.currentJob.id; // coming back from survey screen
+                
+               $('.job-surveys').html('');
+                
+              
+               if(Object.size(app.currentJob) == 0)
+               {
+               		if(app.jobs.length > 0)
+               		{
+                       $(app.jobs).each(function(i,j)
+                       {
+                            
+                            if(j.id == job_id)
+                            {
+                                
+                                app.currentJob = j;
+                                app.showTitle("Job "+j.job_no);
+                                
+                            }
+                           
+                       });
+                   }
+                   else
+                   {
+                       return false;
+                   }
+               }
+                
+                
+                var surveys = [];
+                
+                var nextSurvey = false;
+                
+                // property survey -- always present
+                var survey = {};
+                survey.type = 'property';
+                survey.name = 'Property survey';
+                
+                //console.log(j.property_survey);
+                if(app.currentJob.property_survey.hasOwnProperty('data'))
+                {
+                    survey.icon = 'compose';
+                    nextSurvey = true;
+                }
+                else
+                {
+                    survey.icon = 'add';
+                }
+                
+                surveys.push(survey);
+                
+                // other surveys
+                
+                var otherSurveys = ['preuse','stockfill','exit'];
+                $(otherSurveys).each(function(i,sType)           
+                     {
+                         switch(sType)
+                         {
+                             case 'preuse':
+                                 var name = 'Pre-use';
+                                 break;
+                             case 'stockfill':
+                                 var name = 'Stock fill';
+                                 break;
+                             case 'exit':
+                                 var name = 'Exit';
+                                 break;
+                         }
+                         
+                         
+                         if(nextSurvey)
+                         {
+                             var survey = {};
+                             survey.type = sType;
+                             survey.name = name+' survey';
+                             
+                             if(app.currentJob.surveys.hasOwnProperty(sType))
+                             {
+                                 survey.icon = 'compose';
+                                 nextSurvey = true;
+                             }
+                             else
+                             {
+                                 survey.icon = 'add';
+                                 nextSurvey = false;
+                             }
+                             
+                             surveys.push(survey);
+                         }
+                         
+                         
+                     });
+                
+                
+               $("#surveys-list").kendoMobileListView({
+                  dataSource: surveys,
+                  autoBind: true,
+                  pullToRefresh: false,            
+                  template: $("#job-surveys-template").html()            
+               });
+                
+                
+               $('#job-screen').removeClass('hidden');
+               
+               return false;   
+            }
+            
+            showSurveyScreen = function(e)
+            {
+                
+                
+               	$('#job-screen').addClass('hidden');
+               	$('#jobs-list-btn').addClass('hidden');
+               	$('#surveys-list-btn').removeClass('hidden');
+                
+                $('.optional-survey-fields').addClass('hidden');
+                
+                var sType = $(e.touch.target).data('type');
+                
+                switch(sType)
+                {
+                    case 'property':
+                        var currentSurvey = app.currentJob.property_survey;
+                        var surveyDiv = 'property-survey-screen';
+                        break;
+                    default:
+                        var currentSurvey = eval('app.currentJob.surveys.'+sType);
+                        var surveyDiv = 'survey-screen';
+                        break;
+                }
+                
+                
+                
+                // initialize property survey
+                if(sType == 'property' && (Object.size(currentSurvey) == 0 || typeof(currentSurvey.data) == 'undefined')) // create new survey
+                {
+                    currentSurvey.data = { job_id: app.currentJob.id };
+                    currentSurvey.data.upto = [];
+                    currentSurvey.data.inside = [];
+                    currentSurvey.data.floor = [];
+                    currentSurvey.data.facilities = [];
+                    currentSurvey.data.reach = [];
+                    currentSurvey.notes = '';
+                    currentSurvey.access_notes = '';
+                    
+                    app.currentJob.property_survey = currentSurvey;
+                    
+                    //app.jobService.viewModel.syncCurrentJob();
+                }
+                
+                if(sType != 'property' && Object.size(currentSurvey) == 0 || typeof(currentSurvey) == 'undefined') // create new survey
+                {
+                    //app.currentJob.surveys
+                    if(app.currentJob.surveys.length == 0)
+                    {
+                        app.currentJob.surveys = {};
+                    }
+                    
+                    app.currentJob.surveys[sType] = {};
+                    app.currentJob.surveys[sType].data = { job_id: app.currentJob.id };
+                    app.currentJob.surveys[sType].notes = '';
+                    currentSurvey = app.currentJob.surveys[sType];
+                    //app.jobService.viewModel.syncCurrentJob();
+                }
+                
+                if(sType != 'property')
+                {
+                    
+                    $('.'+sType+'-survey-fields').removeClass('hidden');
+                    
+                    var utilities_working = false;
+                    if(typeof(currentSurvey.data.utilities_working) != 'undefined' && currentSurvey.data.utilities_working) utilities_working = true;
+                    
+                    var switch1 = $("#utilities_working").data("kendoMobileSwitch");
+                    switch1.check(utilities_working);
+                    
+                   
+                }
+                
+                app.currentSurveyType = sType;
+                
+                kendo.bind($("#"+surveyDiv), currentSurvey);
+                
+                if(sType != 'property') showSurveyPictures();
+                
+                $('#'+surveyDiv).removeClass('hidden');
+                
+                return false;
+               
+            }
+            
+            function onSwitch(e)
+            {
+            	
+                surveyFormInputChanged($(e.sender.element[0]));
+                
+            }
+                
+            $('.survey-form-input').on('change',function()
+            {
+                
+                
+                surveyFormInputChanged($(this));
+                
+            });
+                
+            surveyFormInputChanged = function(input)
+            {
+         
+                var target = input.data('target');
+                
+                
+                if(app.currentSurveyType == 'property')
+                {
+                    var survey = app.currentJob.property_survey;
+                }
+                else
+                {
+                    var survey = app.currentJob.surveys[app.currentSurveyType];
+                }
+                
+               
+                
+                if(input.data('role') == 'switch')
+                {
+                    var checked = input.prop('checked') ? 1 : 0;
+                    survey.data[target] = checked;
+                }
+                
+                else if(input.attr('type') == 'checkbox')
+                {
+                    
+                    
+                    if(typeof(survey.data[target]) == 'undefined')
+                    {
+                        survey.data[target] = [];
+                        
+                    }
+                    
+                    if(input.prop('checked'))
+                    {
+                        //console.log(input.val());
+                        if(survey.data[target].indexOf(input.val()) == -1)
+                        {
+                           survey.data[target].push(input.val()); 
+                        }
+                    }
+                    else
+                    {
+                        survey.data[target] = jQuery.grep(survey.data[target], function(value) {
+                  			return value != input.val();
+                		});
+                    }
+                    
+                }
+                
+                else if(input.attr('type') == 'text' || input.attr('type') == 'number' || input.attr('type') == 'date')
+                {
+                    survey.data[target] = input.val();
+                }
+                
+                
+                if(app.currentSurveyType == 'property')
+                {
+                    app.currentJob.property_survey = survey;
+                }
+                else
+                {
+                    app.currentJob.surveys[app.currentSurveyType] = survey;
+                }
+                
+                $('#survey-save-btn').removeClass('hidden');
+                
+            }
+            
+            saveSurvey = function()
+            {
+                $('#survey-save-btn').html('Saving...');
+                app.jobService.viewModel.syncCurrentJob();
+            }
+            
+            runTest = function()
+            {
+                
+                console.log('test');
+                
+            }
+            
+            app.showTitle = function(title)
+            {
+                $('span[data-role="view-title"]').text(title);
+            }
+           
+            </script>
+    
+            
+        </div>
+
+        
+
+        
+        <!--Settings-->
+        <div id="tabstrip-settings" 
+             data-role="view"
+             data-transition="slide"
+             data-title="Settings"
+             data-layout="tabstrip-layout"
+             data-before-show="showSettings"
+             data-model="app.loginService.viewModel">
+            <br><br><br>
+            <div class="buttonArea">
+                <a id="sync-all-btn" data-role="button" data-click="app.jobService.viewModel.syncAll" data-bind="visible: isLoggedIn" class="login-button">Save all jobs</a>
+                <br><br><br><br>
+                <a id="logout" data-role="button" data-bind="click: onLogout, visible: isLoggedIn" class="login-button">Logout</a>
+            </div>
+        </div>
+        
+        
+
+       	<script>
+            showSettings = function()
+            {
+                //app.currentJob = {};
+                //$('#jobs-list-btn').addClass('hidden');
+                //$('#surveys-list-btn').addClass('hidden');
+                //$('#survey-save-btn').addClass('hidden');
+                
+                showJobsList();
+                
+            }
+        </script>
+        <!--Layout-->
+        
+        <div data-role="layout" data-id="splash-layout" class="black"></div>
+        
+        <div data-role="layout" data-id="login-layout" >
+            
+        </div>
+        
+        <script type="text/x-kendo-template" id="debug-template">
+                #: filename # #: size # #: type #
+        </script>
+        
+        <script>
+        app.debugSource = new kendo.data.DataSource({ data: [ {filename: 'zzz', size: '', type: '' } ] });
+        </script>
+        
+        <div id="tabstrip-debug" 
+             data-role="view" 
+             data-title="Debug"
+             data-model="app.jobService.viewModel" 
+             data-layout="tabstrip-layout"
+             data-before-show-later="app.debugService.listFiles"
+             data-transition="slide"
+             >
+             <ul id="filesList" class="job-list-items" data-role="listview" data-style="inset" data-source="app.debugSource" data-auto-bind="true" data-template="debug-template"></ul>
+            <button id="test-button" class="km-button">test</button>
+        </div>
+        
+        <script>
+            $('#test-button').on('click',function(){ 
+            	
+                //app.debugSource = new kendo.data.DataSource({ data: [ {filename: '3453453', size: '', type: '' } ] });
+                console.log(app.debugSource.at(0).filename);
+                app.debugSource.at(0).filename = 'new name';
+                console.log(app.debugSource.at(0).filename);
+                app.debugSource.sync();
+            
+            });
+        </script>
+        
+        <div data-role="layout" data-id="tabstrip-layout" data-model="app.footerModel">
+
+            <!--Header-->
+            <div data-role="header">
+                <div data-role="navbar">
+                    <span data-role="view-title"></span>
+                    <a id="jobs-list-btn" data-role="button" data-click="app.jobService.viewModel.getJobs" class="hidden" data-align="left">Back</a>
+                    <a id="surveys-list-btn" data-role="button" data-click="showJobScreen" class="hidden" data-align="left">Back</a>
+                    <a id="survey-save-btn" data-role="button" data-click="saveSurvey" class="hidden" data-align="right">Save</a>
+                </div>
+            </div>
+
+            <!--Footer-->
+            <div data-role="footer" >
+                <div data-role="tabstrip">
+                    <a href="#tabstrip-home" data-icon="home">Jobs</a>
+                    <a href="#tabstrip-settings" data-icon="settings">Settings</a>
+                    <a href="#tabstrip-debug" id="debug-tab" data-icon="search" class="hidden">Debug</a>
+                </div>
+            </div>
+        </div>
+        
+        
+    </body>
+</html>
